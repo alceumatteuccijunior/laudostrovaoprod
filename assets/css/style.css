@@ -1,0 +1,370 @@
+/* Ficheiro: assets/css/style.css */
+
+/* --- Configurações Globais e Tema Escuro --- */
+body {
+    font-family: 'Inter', sans-serif;
+    overflow-x: hidden; /* Previne o scroll horizontal */
+}
+
+.bg-dark-custom {
+    background-color: #121212 !important;
+    color: #e0e0e0;
+}
+
+.bg-dark-sidebar {
+    background-color: #1E1E1E !important;
+}
+
+.bg-dark-custom-nav {
+    background-color: #121212 !important;
+    border-bottom: 1px solid #333;
+}
+
+/* --- Ecrã de Autenticação --- */
+.login-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+.login-box {
+    width: 100%;
+    max-width: 400px;
+    padding: 2rem;
+}
+
+.logo-text-login {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #fff;
+    vertical-align: middle;
+    margin-left: 10px;
+}
+
+.login-box .form-control, .form-control {
+    background-color: #333;
+    border: 1px solid #555;
+    color: #fff;
+}
+
+.login-box .form-control:focus, .form-control:focus {
+    background-color: #444;
+    border-color: #ffc107;
+    box-shadow: none;
+    color: #fff;
+}
+
+.login-box .form-label, .form-label {
+    color: #ccc;
+}
+
+.text-warning-custom {
+    color: #ffc107 !important;
+    text-decoration: none;
+}
+.text-warning-custom:hover {
+    text-decoration: underline;
+}
+
+/* --- Layout Principal (Barra Lateral e Conteúdo) --- */
+#wrapper {
+    transition: all 0.4s ease 0s;
+}
+
+#sidebar-wrapper {
+    min-height: 100vh;
+    margin-left: -15rem;
+    transition: margin 0.25s ease-out;
+}
+
+#sidebar-wrapper .sidebar-heading {
+    padding: 0.875rem 1.25rem;
+    font-size: 1.2rem;
+    color: #fff;
+}
+
+#sidebar-wrapper .logo-text {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #fff;
+    vertical-align: middle;
+    margin-left: 8px;
+}
+
+#sidebar-wrapper .list-group {
+    width: 15rem;
+}
+
+#sidebar-wrapper .list-group-item {
+    background-color: #1E1E1E;
+    color: #ccc;
+    border: none;
+    padding: 1rem 1.25rem;
+}
+
+#sidebar-wrapper .list-group-item:hover {
+    background-color: #2c2c2c;
+    color: #ffc107;
+}
+
+#sidebar-wrapper .list-group-item.active {
+    background-color: #000;
+    color: #ffc107;
+    border-left: 4px solid #ffc107;
+}
+
+#page-content-wrapper {
+    min-width: 100vw;
+}
+
+#wrapper.toggled #sidebar-wrapper {
+    margin-left: 0;
+}
+
+#menu-toggle {
+    cursor: pointer;
+    color: #ccc;
+}
+#menu-toggle:hover {
+    color: #ffc107;
+}
+
+.page-title {
+    color: #fff;
+}
+
+@media (min-width: 768px) {
+    #sidebar-wrapper {
+        margin-left: 0;
+    }
+
+    #page-content-wrapper {
+        min-width: 0;
+        width: 100%;
+    }
+
+    #wrapper.toggled #sidebar-wrapper {
+        margin-left: -15rem;
+    }
+}
+
+/* --- Estilos do Painel de Controlo --- */
+.page-title-main {
+    color: #fff;
+}
+
+.card-kpi {
+    background-color: #1E1E1E;
+    border: 1px solid #333;
+    border-radius: 0.5rem;
+    color: #e0e0e0;
+}
+
+.card-kpi .card-body {
+    padding: 1.5rem;
+}
+
+.card-kpi .text-xs {
+    font-size: 0.8rem;
+    color: #888;
+}
+
+.card-kpi .h5 {
+    color: #fff;
+}
+
+.card-kpi .text-gray-300 {
+    color: #555 !important;
+}
+
+.card-kpi .card-header {
+    background-color: #252525;
+    border-bottom: 1px solid #333;
+    font-weight: 600;
+}
+
+/* --- Estilos do Formulário por Passos (Wizard) --- */
+.form-step {
+    display: none;
+    animation: fadeIn 0.5s;
+}
+
+.form-step-active {
+    display: block;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.form-check-input:checked {
+    background-color: #ffc107;
+    border-color: #ffc107;
+}
+
+.form-check.form-switch {
+    padding-left: 3.5em;
+}
+
+.form-check-input {
+    width: 2.5em;
+    height: 1.25em;
+}
+
+/* Estilo para campos inválidos */
+.form-control.is-invalid {
+    border-color: #dc3545 !important;
+}
+
+.form-control.is-invalid:focus {
+    box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
+}
+
+/* --- Estilos da Tabela de Serviços --- */
+.table-services thead {
+    color: #ffc107;
+}
+
+.table-services th {
+    border-bottom-width: 1px !important;
+    border-color: #444 !important;
+}
+
+.table-services td, .table-services th {
+    vertical-align: middle;
+}
+
+.table-hover > tbody > tr:hover > * {
+  --bs-table-accent-bg: rgba(255, 255, 255, 0.05);
+  color: var(--bs-table-hover-color);
+}
+
+/* Estilo para campos inválidos */
+.form-control.is-invalid, .form-select.is-invalid {
+    border-color: #dc3545 !important;
+}
+
+.form-control.is-invalid:focus, .form-select.is-invalid:focus {
+    box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
+}
+
+/* --- Estilos para o Autocompletar --- */
+.autocomplete-container {
+    position: relative;
+}
+
+.autocomplete-results {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: #2c2c2c;
+    border: 1px solid #555;
+    border-top: none;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+}
+
+.autocomplete-item {
+    padding: 10px;
+    cursor: pointer;
+    color: #ccc;
+}
+
+.autocomplete-item:hover {
+    background-color: #444;
+    color: #ffc107;
+}
+
+/* --- Estilos da Paginação --- */
+.pagination .page-item .page-link {
+    background-color: #333;
+    border-color: #555;
+    color: #ccc;
+}
+
+.pagination .page-item.active .page-link {
+    background-color: #ffc107;
+    border-color: #ffc107;
+    color: #121212;
+}
+
+.pagination .page-item.disabled .page-link {
+    background-color: #222;
+    border-color: #444;
+    color: #777;
+}
+
+.pagination .page-item:not(.active) .page-link:hover {
+    background-color: #444;
+}
+
+
+/* --- Estilos para o Autocompletar --- */
+.autocomplete-container {
+    position: relative;
+}
+
+.autocomplete-results {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: #2c2c2c;
+    border: 1px solid #555;
+    border-top: none;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+}
+
+.autocomplete-item {
+    padding: 10px;
+    cursor: pointer;
+    color: #ccc;
+}
+
+.autocomplete-item:hover {
+    background-color: #444;
+    color: #ffc107;
+}
+
+/* --- Estilos do Formulário de Registo de Serviço --- */
+.resumo-financeiro {
+    background-color: #252525;
+    border: 1px solid #444;
+}
+
+.resumo-financeiro .form-control-sm {
+    background-color: #333;
+    border-color: #555;
+    color: #fff;
+    text-align: right;
+}
+
+/* ... (todo o seu CSS existente) ... */
+
+/* --- Estilos da Tabela de Serviços --- */
+.table-services thead {
+    color: #ffc107;
+}
+/* ... (restante dos estilos da tabela) ... */
+
+.table-danger-custom {
+    --bs-table-bg: #4d1f24;
+    --bs-table-striped-bg: #58242a;
+    --bs-table-striped-color: #fff;
+    --bs-table-active-bg: #632a30;
+    --bs-table-active-color: #fff;
+    --bs-table-hover-bg: #5d272d;
+    --bs-table-hover-color: #fff;
+    color: #fff;
+    border-color: #7d343b;
+}
+
+.text-muted{
+    color: #fff !important;
+}

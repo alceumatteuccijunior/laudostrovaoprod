@@ -1,0 +1,221 @@
+<?php
+// Ficheiro: pages/services_list.php
+
+require_once '../includes/db_connect.php';
+require_once '../includes/functions.php';
+
+secure_session_start();
+
+if (!is_user_logged_in()) {
+    header('Location: ../index.php?error=notloggedin');
+    exit();
+}
+
+// --- Lógica de Filtros ---
+$data_inicio = filter_input(INPUT_GET, 'data_inicio', FILTER_SANITIZE_STRING) ?: date('Y-m-01');
+$data_fim = filter_input(INPUT_GET, 'data_fim', FILTER_SANITIZE_STRING) ?: date('Y-m-t');
+$filtro_pedido = filter_input(INPUT_GET, 'filtro_pedido', FILTER_SANITIZE_STRING) ?: '';
+$filtro_cliente = filter_input(INPUT_GET, 'filtro_cliente', FILTER_SANITIZE_STRING) ?: '';
+$filtro_profissional = filter_input(INPUT_GET, 'filtro_profissional', FILTER_SANITIZE_STRING) ?: '';
+
+
+// --- Lógica de Paginação ---
+$resultados_por_pagina = 20;
+$pagina_atual = filter_input(INPUT_GET, 'pagina', FILTER_VALIDATE_INT) ?: 1;
+$offset = ($pagina_atual - 1) * $resultados_por_pagina;
+
+// --- Construção da Query SQL com base nos filtros ---
+$sql_where_conditions = [];
+$params = [];
+
+// Filtro de período é sempre aplicado
+$sql_where_conditions[] = "os.data_registo BETWEEN :data_inicio AND :data_fim";
+$params[':data_inicio'] = $data_inicio . ' 00:00:00';
+$params[':data_fim'] = $data_fim . ' 23:59:59';
+
+// Filtros de pesquisa individuais
+if (!empty($filtro_pedido)) {
+    $sql_where_conditions[] = "os.id = :pedido_id";
+    $params[':pedido_id'] = $filtro_pedido;
+}
+if (!empty($filtro_cliente)) {
+    $sql_where_conditions[] = "c.nome_razao_social LIKE :cliente";
+    $params[':cliente'] = '%' . $filtro_cliente . '%';
+}
+if (!empty($filtro_profissional)) {
+    $sql_where_conditions[] = "p.nome LIKE :profissional";
+    $params[':profissional'] = '%' . $filtro_profissional . '%';
+}
+
+$sql_where = " WHERE " . implode(" AND ", $sql_where_conditions);
+
+try {
+    $sql_base = "FROM ordens_servico AS os JOIN clientes AS c ON os.cliente_id = c.id JOIN profissionais AS p ON os.profissional_id = p.id" . $sql_where;
+    
+    $stmt_total = $pdo->prepare("SELECT COUNT(os.id) " . $sql_base);
+    $stmt_total->execute($params);
+    $total_resultados = $stmt_total->fetchColumn();
+    $total_paginas = ceil($total_resultados / $resultados_por_pagina);
+
+    $sql_servicos = "SELECT os.id, os.status, os.reprovado, c.nome_razao_social, p.nome AS nome_profissional, os.placa_carreta, os.data_registo " . $sql_base . " ORDER BY os.data_registo DESC LIMIT :limit OFFSET :offset";
+    
+    $stmt_servicos = $pdo->prepare($sql_servicos);
+    
+    // Bind dos parâmetros dos filtros
+    foreach ($params as $key => &$val) {
+        $stmt_servicos->bindParam($key, $val);
+    }
+    
+    // Bind dos parâmetros de paginação
+    $stmt_servicos->bindValue(':limit', $resultados_por_pagina, PDO::PARAM_INT);
+    $stmt_servicos->bindValue(':offset', $offset, PDO::PARAM_INT);
+
+    $stmt_servicos->execute();
+    $servicos = $stmt_servicos->fetchAll();
+
+} catch (PDOException $e) {
+    // Para depuração: die($e->getMessage());
+    $servicos = [];
+    $total_paginas = 0;
+}
+
+include '../templates/header.php';
+include '../templates/sidebar.php';
+?>
+
+<!-- Início do Conteúdo Específico da Página -->
+<h1 class="mt-4 page-title-main">Histórico de Pedidos</h1>
+<p class="text-muted">Consulte e filtre todos os pedidos registrados no sistema.</p>
+
+<!-- Formulário de Filtros -->
+<div class="card-kpi my-4">
+    <div class="card-body">
+        <form method="GET" action="services_list.php" class="row g-3 align-items-end">
+            <div class="col-md-2">
+                <label for="data_inicio" class="form-label">De</label>
+                <input type="date" name="data_inicio" id="data_inicio" class="form-control" value="<?php echo htmlspecialchars($data_inicio); ?>">
+            </div>
+            <div class="col-md-2">
+                <label for="data_fim" class="form-label">Até</label>
+                <input type="date" name="data_fim" id="data_fim" class="form-control" value="<?php echo htmlspecialchars($data_fim); ?>">
+            </div>
+            <div class="col-md-2">
+                <label for="filtro_pedido" class="form-label">Nº Pedido</label>
+                <input type="text" name="filtro_pedido" id="filtro_pedido" class="form-control" value="<?php echo htmlspecialchars($filtro_pedido); ?>">
+            </div>
+            <div class="col-md-2">
+                <label for="filtro_cliente" class="form-label">Cliente</label>
+                <input type="text" name="filtro_cliente" id="filtro_cliente" class="form-control" value="<?php echo htmlspecialchars($filtro_cliente); ?>">
+            </div>
+            <div class="col-md-2">
+                <label for="filtro_profissional" class="form-label">Profissional</label>
+                <input type="text" name="filtro_profissional" id="filtro_profissional" class="form-control" value="<?php echo htmlspecialchars($filtro_profissional); ?>">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-warning w-100">Filtrar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<div class="card-kpi mt-4">
+    <div class="card-body p-4">
+        <div class="table-responsive">
+            <table class="table table-dark table-hover table-services">
+                <thead>
+                    <tr>
+                        <th scope="col">Nº Pedido</th>
+                        <th scope="col">Cliente</th>
+                        <th scope="col">Profissional</th>
+                        <th scope="col">Placa</th>
+                        <th scope="col">Data</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Status Reprova</th>
+                        <th scope="col">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (empty($servicos)): ?>
+                        <tr><td colspan="7" class="text-center">Nenhum pedido encontrado para os filtros selecionados.</td></tr>
+                    <?php else: ?>
+                        <?php foreach ($servicos as $servico): ?>
+                            <tr class="<?php echo $servico['status'] === 'Cancelado' ? 'table-danger-custom' : ($servico['reprovado'] ? 'table-warning text-dark' : ''); ?>">
+                                <th scope="row"><?php echo htmlspecialchars($servico['id']); ?></th>
+                                <td><?php echo htmlspecialchars($servico['nome_razao_social']); ?></td>
+                                <td><?php echo htmlspecialchars($servico['nome_profissional']); ?></td>
+                                <td><?php echo htmlspecialchars($servico['placa_carreta']); ?></td>
+                                <td><?php echo date('d/m/Y H:i', strtotime($servico['data_registo'])); ?></td>
+                                <td>
+                                    <span class="badge bg-<?php echo $servico['status'] == 'Ativo' ? 'success' : 'danger'; ?>">
+                                        <?php echo htmlspecialchars($servico['status']); ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <?php if ($servico['reprovado']): ?>
+                                        <span class="badge bg-warning text-dark"><i class="bi bi-exclamation-triangle"></i> Reprovado</span>
+                                    <?php else: ?>
+                                        <span class="text-muted">-</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <a href="service_details.php?id=<?php echo $servico['id']; ?>" class="btn btn-sm btn-outline-warning" title="Ver Detalhes">
+                                        <i class="bi bi-file-earmark-text"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Navegação da Paginação -->
+        <?php if ($total_paginas > 1): ?>
+        <nav aria-label="Navegação da página" class="mt-4">
+            <ul class="pagination justify-content-center">
+                <?php
+                // Mantém os filtros na URL da paginação
+                $query_params = http_build_query([
+                    'data_inicio' => $data_inicio,
+                    'data_fim' => $data_fim,
+                    'filtro_pedido' => $filtro_pedido,
+                    'filtro_cliente' => $filtro_cliente,
+                    'filtro_profissional' => $filtro_profissional
+                ]);
+
+                // Botão Anterior
+                if ($pagina_atual > 1): ?>
+                    <li class="page-item">
+                        <a class="page-link" href="?pagina=<?php echo $pagina_atual - 1; ?>&<?php echo $query_params; ?>">Anterior</a>
+                    </li>
+                <?php else: ?>
+                    <li class="page-item disabled"><span class="page-link">Anterior</span></li>
+                <?php endif;
+
+                // Links das páginas
+                for ($i = 1; $i <= $total_paginas; $i++): ?>
+                    <li class="page-item <?php if ($i == $pagina_atual) echo 'active'; ?>">
+                        <a class="page-link" href="?pagina=<?php echo $i; ?>&<?php echo $query_params; ?>"><?php echo $i; ?></a>
+                    </li>
+                <?php endfor;
+
+                // Botão Próximo
+                if ($pagina_atual < $total_paginas): ?>
+                    <li class="page-item">
+                        <a class="page-link" href="?pagina=<?php echo $pagina_atual + 1; ?>&<?php echo $query_params; ?>">Próximo</a>
+                    </li>
+                <?php else: ?>
+                    <li class="page-item disabled"><span class="page-link">Próximo</span></li>
+                <?php endif; ?>
+            </ul>
+        </nav>
+        <?php endif; ?>
+
+    </div>
+</div>
+
+<?php
+include '../templates/footer.php';
+?>
+
