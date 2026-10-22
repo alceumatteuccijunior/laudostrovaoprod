@@ -76,10 +76,16 @@ try {
     $stmt->execute($params);
     $pedidos = $stmt->fetchAll();
 
-    $templatePath = 'template_omie.xlsx'; 
+    // Usa o novo modelo atualizado do Omie
+    $templatePath = 'template_omie_new.xlsx'; 
     
     if (!file_exists($templatePath)) {
-        die("Erro: O arquivo modelo 'template_omie.xlsx' não foi encontrado na pasta includes.");
+        // Fallback para modelo anterior caso não encontre o novo
+        $templatePath = 'template_omie.xlsx';
+    }
+
+    if (!file_exists($templatePath)) {
+        die("Erro: O arquivo modelo 'template_omie_new.xlsx' não foi encontrado na pasta includes.");
     }
 
     $spreadsheet = IOFactory::load($templatePath);
@@ -118,7 +124,7 @@ try {
         $motorista_partes = explode(' ', trim($nome_bruto));
         $motorista_primeiro_nome = !empty($motorista_partes[0]) ? substr($motorista_partes[0], 0, 15) : '';
 
-        // Mapeamento exato conforme solicitado para importação Omie
+        // Mapeamento atualizado conforme novo layout de importação do Omie (template_omie_new.xlsx)
         $sheet->setCellValue('B' . $rowNum, $row['id']); // Código de Integração
         $sheet->setCellValue('C' . $rowNum, $row['nome_razao_social']); // Cliente
         $sheet->setCellValue('D' . $rowNum, $data_hoje); // Previsão de Faturamento
@@ -131,25 +137,27 @@ try {
         $sheet->setCellValue('K' . $rowNum, $row['placa_cavalo']); // Nº do Contrato de Venda
         $sheet->setCellValue('L' . $rowNum, $data_lavagem); // Data RPS
         $sheet->setCellValue('M' . $rowNum, 'SÃO ROQUE (SP)'); // Cidade da Prestação do Serviço
-        $sheet->setCellValue('N' . $rowNum, $row['placa_carreta']); // Código da Obra
-        $sheet->setCellValue('O' . $rowNum, $motorista_primeiro_nome); // Código ART
-        $sheet->setCellValue('P' . $rowNum, $lacres_str); // Contato
+        $sheet->setCellValue('N' . $rowNum, 'SÃO ROQUE (SP)'); // Cidade de Incidência (Nova coluna no Omie)
+        $sheet->setCellValue('O' . $rowNum, $row['placa_carreta']); // Código da Obra (deslocada N -> O)
+        $sheet->setCellValue('P' . $rowNum, $motorista_primeiro_nome); // Código ART (deslocada O -> P)
+        $sheet->setCellValue('Q' . $rowNum, $lacres_str); // Contato (deslocada P -> Q)
         
-        // Pulos de colunas Q, R, S, T, etc...
-        $sheet->setCellValue('U' . $rowNum, 'Não'); // Enviar o Link da NFS-e
-        $sheet->setCellValue('V' . $rowNum, 'Não'); // Enviar também o Pix de Cobrança
-        $sheet->setCellValue('X' . $rowNum, '1180330'); // Observações
+        // Pulos de colunas e opções de envio
+        $sheet->setCellValue('T' . $rowNum, 'Não'); // Enviar o Link da NFS-e gerada na Prefeitura?
+        $sheet->setCellValue('V' . $rowNum, 'Não'); // Enviar também o Link de Cobrança?
+        $sheet->setCellValue('W' . $rowNum, 'Não'); // Enviar também o Pix de Cobrança?
+        $sheet->setCellValue('Y' . $rowNum, '1180330'); // Observações (deslocada X -> Y)
         
         // Dados Fiscais e Financeiros
-        $sheet->setCellValue('AC' . $rowNum, 'Imune'); // Tributação de Serviços
-        $sheet->setCellValue('AD' . $rowNum, '14.01'); // Código do Serviço Municipal
-        $sheet->setCellValue('AE' . $rowNum, '14.01'); // Código do Serviço LC116
-        $sheet->setCellValue('AF' . $rowNum, '118033000'); // Código NBS
-        $sheet->setCellValue('AG' . $rowNum, 1); // Quantidade
-        $sheet->setCellValue('AH' . $rowNum, $valor_unitario); // VALOR INDIVIDUAL DO SERVIÇO DESMEMBRADO
-        $sheet->setCellValue('AI' . $rowNum, 'Não'); // Não gerar conta a receber para este item?
-        $sheet->setCellValue('AJ' . $rowNum, '0.00'); // Valor das Deduções
-        $sheet->setCellValue('AK' . $rowNum, $nome_servico); // NOME ESPECÍFICO DO SERVIÇO
+        $sheet->setCellValue('AD' . $rowNum, 'Imune'); // Tributação de Serviços (deslocada AC -> AD)
+        $sheet->setCellValue('AE' . $rowNum, '14.01'); // Código do Serviço Municipal (deslocada AD -> AE)
+        $sheet->setCellValue('AF' . $rowNum, '14.01'); // Código do Serviço LC116 (deslocada AE -> AF)
+        $sheet->setCellValue('AG' . $rowNum, '118033000'); // Código NBS (deslocada AF -> AG)
+        $sheet->setCellValue('AH' . $rowNum, 1); // Quantidade (deslocada AG -> AH)
+        $sheet->setCellValue('AI' . $rowNum, $valor_unitario); // VALOR INDIVIDUAL DO SERVIÇO DESMEMBRADO (deslocada AH -> AI)
+        $sheet->setCellValue('AJ' . $rowNum, 'Não'); // Não gerar conta a receber para este item? (deslocada AI -> AJ)
+        $sheet->setCellValue('AK' . $rowNum, '0.00'); // Valor das Deduções (deslocada AJ -> AK)
+        $sheet->setCellValue('AL' . $rowNum, $nome_servico); // NOME ESPECÍFICO DO SERVIÇO (deslocada AK -> AL)
 
         $rowNum++;
     }
